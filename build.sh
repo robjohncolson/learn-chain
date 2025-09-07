@@ -21,11 +21,23 @@ if [ -f "app.zip" ]; then
 fi
 
 # Create zip file containing dist/ and assets/
-zip -rq app.zip dist/ assets/
-
-if [ $? -ne 0 ]; then
-    echo "Failed to create zip file. Exiting."
-    exit 1
+if command -v zip >/dev/null 2>&1; then
+    zip -rq app.zip dist/ assets/
+    if [ $? -ne 0 ]; then
+        echo "Failed to create zip file. Exiting."
+        exit 1
+    fi
+elif command -v tar >/dev/null 2>&1; then
+    echo "zip not found, using tar to create app.tar.gz..."
+    tar -czf app.tar.gz dist/ assets/
+    if [ $? -ne 0 ]; then
+        echo "Failed to create tar file. Exiting."
+        exit 1
+    fi
+    echo "Created app.tar.gz instead of app.zip"
+else
+    echo "Warning: Neither zip nor tar available. Skipping archive creation."
+    echo "You can manually create an archive of dist/ and assets/ directories."
 fi
 
 echo "Opening dist/index.html for testing..."

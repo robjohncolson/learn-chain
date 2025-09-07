@@ -3,6 +3,8 @@
  * Aligned with FUNDAMENTAL.md specification and AP Statistics curriculum
  */
 
+import type { ConsensusData } from './consensus';
+
 // ============= Core Question & Curriculum Types =============
 
 /** Represents a single question in the curriculum (Q atoms) */
@@ -467,17 +469,4 @@ export interface RendererConfig {
 }
 
 // ============= Consensus Data Types =============
-// These will be defined in consensus.ts but included here for reference
-
-export interface ConsensusData {
-  questionId: string;
-  mcqDistribution?: Record<string, number>;
-  frqDistribution?: Array<{ score: number; count: number }>;
-  frqScores?: Array<{ score: number; count: number }>;
-  convergence: number;
-  confidence: number;
-  quorum: number;
-  totalAttestations: number;
-  hasConsensus: boolean;
-  emergentAnswer?: string | number;
-}
+// ConsensusData is defined in consensus.ts - import from there
