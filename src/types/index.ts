@@ -6,8 +6,31 @@
 // Core quiz types
 export * from './quiz';
 
-// Consensus and attestation types
-export * from './consensus';
+// Consensus and attestation types (excluding ConsensusData which is in quiz.ts)
+export {
+  Attestation,
+  MCQDistribution,
+  FRQDistribution,
+  QuorumRequirements,
+  APReveal,
+  ReputationMetrics,
+  AttestationHistory,
+  RateLimitInfo,
+  OutlierDetection,
+  ConsensusChartConfig,
+  ConsensusVisualization,
+  TransactionType,
+  Transaction,
+  CreateUserData,
+  CalculateQuorum,
+  UpdateDistributions,
+  CalculateConvergence,
+  DetectOutliers,
+  ValidateSignature,
+  CheckRateLimit,
+  ConsensusAPI,
+  CONSENSUS_CONSTANTS
+} from './consensus';
 
 // Type guards for runtime validation
 export { isQuestion, isCurriculum, isConsensusData } from './guards';

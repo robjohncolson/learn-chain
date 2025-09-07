@@ -134,9 +134,9 @@ export function parseCurriculum(jsonText: string): Curriculum {
       questions = [parsed];
     } else {
       // Try to extract questions from object properties
-      questions = Object.values(parsed).filter((item: any) => 
-        typeof item === 'object' && item.id && item.prompt
-      );
+      questions = Object.values(parsed).filter((item): item is Question => 
+        typeof item === 'object' && item !== null && 'id' in item && 'prompt' in item
+      ) as Question[];
     }
   }
   

@@ -473,12 +473,36 @@ export function renderConsensusDisplay(
   
   // MCQ distribution
   if (consensus.mcqDistribution) {
-    html += renderMCQConsensus(consensus.mcqDistribution, questionId);
+    const mcqDist: MCQDistribution = {
+      choices: consensus.mcqDistribution,
+      total: Object.values(consensus.mcqDistribution).reduce((a, b) => a + b, 0),
+      mode: Object.entries(consensus.mcqDistribution).reduce((a, b) => b[1] > a[1] ? b : a)[0],
+      modePercentage: 0
+    };
+    mcqDist.modePercentage = (consensus.mcqDistribution[mcqDist.mode] / mcqDist.total) * 100;
+    html += renderMCQConsensus(mcqDist, questionId);
   }
   
   // FRQ distribution
   if (consensus.frqDistribution) {
-    html += renderFRQConsensus(consensus.frqDistribution, questionId);
+    const frqDist: FRQDistribution = {
+      scores: consensus.frqDistribution.map(s => ({
+        score: s.score,
+        count: s.count,
+        percentage: 0
+      })),
+      mean: 0,
+      median: 0,
+      stdDev: 0,
+      total: consensus.frqDistribution.reduce((sum, s) => sum + s.count, 0)
+    };
+    // Calculate percentages
+    frqDist.scores.forEach(s => {
+      s.percentage = (s.count / frqDist.total) * 100;
+    });
+    // Simple mean calculation
+    frqDist.mean = frqDist.scores.reduce((sum, s) => sum + s.score * s.count, 0) / frqDist.total;
+    html += renderFRQConsensus(frqDist, questionId);
   }
   
   // Confidence metrics

@@ -28,6 +28,9 @@ export interface Question {
   /** Supplementary materials (charts, tables, images) */
   attachments?: Attachments;
   
+  /** Direct choices array (convenience, usually in attachments) */
+  choices?: Choice[];
+  
   /** Detailed solution for free-response questions */
   solution?: Solution;
   
@@ -469,9 +472,12 @@ export interface RendererConfig {
 export interface ConsensusData {
   questionId: string;
   mcqDistribution?: Record<string, number>;
+  frqDistribution?: Array<{ score: number; count: number }>;
   frqScores?: Array<{ score: number; count: number }>;
   convergence: number;
   confidence: number;
   quorum: number;
   totalAttestations: number;
+  hasConsensus: boolean;
+  emergentAnswer?: string | number;
 }
