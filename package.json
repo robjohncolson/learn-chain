@@ -1,0 +1,36 @@
+{
+  "name": "learn-chain",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "parcel build src/index.html --dist-dir dist",
+    "dev": "parcel src/index.html --open",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robjohncolson/learn-chain.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/robjohncolson/learn-chain/issues"
+  },
+  "homepage": "https://github.com/robjohncolson/learn-chain#readme",
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "parcel": "^2.9.0"
+  },
+  "dependencies": {
+    "idb": "^7.1.1",
+    "chart.js": "3.9.1",
+    "mathjax": "^3.2.2",
+    "qrcode": "^1.5.3",
+    "html5-qrcode": "^2.3.8",
+    "lz-string": "^1.5.0",
+    "uuid": "^9.0.1"
+  }
+}
