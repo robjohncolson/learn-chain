@@ -6,7 +6,12 @@
       "Bash(sudo apt-get:*)",
       "Bash(unzip:*)",
       "Bash(npm run build:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(sudo rm:*)",
+      "Bash(npx parcel build:*)",
+      "Bash(zip:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

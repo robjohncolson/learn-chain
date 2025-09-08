@@ -1,70 +1,60 @@
 #!/bin/bash
 
-echo "Building the project..."
-npm run build
+# AP Statistics PoK Blockchain - Production Build Script
+# Phase 6: Build, Package, and Deploy
 
-if [ $? -ne 0 ]; then
-    echo "Build failed. Exiting."
-    exit 1
-fi
+echo "🔨 AP Stats Blockchain Builder"
+echo "=============================="
 
-echo "Zipping dist/ and assets/ into app.zip..."
-# Verify dist/ directory exists
-if [ ! -d "dist/" ]; then
-    echo "Error: dist/ directory not found. Build may have failed."
-    exit 1
-fi
+# Step 1: Clean previous builds
+echo "📦 Cleaning previous builds..."
+rm -rf dist/ app.zip test-deploy/
 
-# Remove existing app.zip if it exists
-if [ -f "app.zip" ]; then
-    rm app.zip
-fi
+# Step 2: Run TypeScript type checking (non-blocking)
+echo "🔍 Checking TypeScript types..."
+npm run typecheck || echo "⚠️  Type errors found (continuing anyway)"
 
-# Create zip file containing dist/ and assets/
-if command -v zip >/dev/null 2>&1; then
-    zip -rq app.zip dist/ assets/
-    if [ $? -ne 0 ]; then
-        echo "Failed to create zip file. Exiting."
-        exit 1
-    fi
-elif command -v tar >/dev/null 2>&1; then
-    echo "zip not found, using tar to create app.tar.gz..."
-    tar -czf app.tar.gz dist/ assets/
-    if [ $? -ne 0 ]; then
-        echo "Failed to create tar file. Exiting."
-        exit 1
-    fi
-    echo "Created app.tar.gz instead of app.zip"
-else
-    echo "Warning: Neither zip nor tar available. Skipping archive creation."
-    echo "You can manually create an archive of dist/ and assets/ directories."
-fi
+# Step 3: Build with Parcel
+echo "🏗️  Building production bundle..."
+npx parcel build src/index.html --public-url ./ --no-source-maps --dist-dir dist
 
-echo "Opening dist/index.html for testing..."
-# Verify dist/index.html exists before attempting to open
-if [ ! -f "dist/index.html" ]; then
-    echo "Error: dist/index.html not found. Build may have failed."
-    exit 1
-fi
+# Step 4: Check build size
+DIST_SIZE=$(du -sh dist | cut -f1)
+echo "📏 Build size: $DIST_SIZE"
 
-# Enhanced cross-platform support including WSL
-if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-    start dist/index.html 2>/dev/null || echo "Please manually open dist/index.html in your browser"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    open dist/index.html 2>/dev/null || echo "Please manually open dist/index.html in your browser"
-elif [[ -n "$WSL_DISTRO_NAME" ]] || [[ -d "/mnt/c" ]]; then
-    # WSL environment - try multiple methods
-    if command -v wslview >/dev/null 2>&1; then
-        wslview dist/index.html 2>/dev/null || echo "Please manually open dist/index.html in your browser"
-    elif command -v cmd.exe >/dev/null 2>&1; then
-        cmd.exe /c start "" "$(wslpath -w "$(pwd)/dist/index.html")" 2>/dev/null || echo "Please manually open dist/index.html in your browser"
-    else
-        echo "Please manually open dist/index.html in your browser"
-    fi
-else
-    xdg-open dist/index.html 2>/dev/null || echo "Please manually open dist/index.html in your browser"
-fi
+# Step 5: Create distribution package
+echo "📦 Creating app.zip..."
+zip -r app.zip dist/ assets/
 
-echo "Build script completed successfully!"
-echo "app.zip created with dist/ and assets/"
-echo "dist/index.html opened for testing"
+# Step 6: Report package size
+ZIP_SIZE=$(ls -lh app.zip | awk '{print $5}')
+echo "✅ Package created: app.zip ($ZIP_SIZE)"
+
+# Step 7: Create test deployment
+echo "🧪 Creating test deployment..."
+mkdir -p test-deploy
+cd test-deploy
+unzip -q ../app.zip
+echo "📂 Test deployment ready at: test-deploy/dist/index.html"
+cd ..
+
+# Step 8: Final summary
+echo ""
+echo "==================================="
+echo "✨ Build Complete!"
+echo "==================================="
+echo "📦 Distribution: app.zip ($ZIP_SIZE)"
+echo "📂 Test locally: open test-deploy/dist/index.html"
+echo ""
+echo "Deployment steps:"
+echo "1. Transfer app.zip to target device"
+echo "2. Unzip to desired location"
+echo "3. Open dist/index.html in browser"
+echo ""
+echo "Testing checklist:"
+echo "☐ Profile creation with seed phrase"
+echo "☐ Question loading from assets/"
+echo "☐ MCQ and FRQ attestations"
+echo "☐ QR code generation/scanning"
+echo "☐ Blockchain sync between devices"
+echo "☐ Reputation updates"

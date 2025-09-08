@@ -228,3 +228,27 @@ export class Storage {
     }
   }
 }
+
+// Legacy compatibility functions for modules expecting loadState/saveState
+export async function loadState(): Promise<any> {
+  const storage = new Storage();
+  await storage.init();
+  const blocks = await storage.getChain();
+  const profiles = await storage.getAllProfiles();
+  storage.close();
+  return { blocks, profiles };
+}
+
+export async function saveState(state: any): Promise<void> {
+  const storage = new Storage();
+  await storage.init();
+  if (state.blocks) {
+    await storage.saveChain(state.blocks);
+  }
+  if (state.profiles) {
+    for (const profile of state.profiles) {
+      await storage.saveProfile(profile);
+    }
+  }
+  storage.close();
+}

@@ -95,7 +95,7 @@ export class AnonymityProvider {
     }
 
     // Check that signature doesn't follow predictable patterns
-    if (this.hasP predictablePattern(signature)) {
+    if (this.hasPredictablePattern(signature)) {
       console.warn('Signature has predictable pattern');
       return false;
     }

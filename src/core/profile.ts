@@ -2,6 +2,9 @@
 import { Profile, SelectRandomWords } from './types.js';
 import { generateKeyPair } from './crypto.js';
 
+// Re-export Profile type for modules that import from this file
+export type { Profile } from './types.js';
+
 // BIP39 wordlist - hardcoded subset for deterministic generation
 // Full list has 2048 words - using first 256 for demonstration
 const BIP39_WORDLIST = [
