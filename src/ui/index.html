@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AP Statistics PoK Blockchain</title>
+  
+  <!-- Load allUnitsData -->
+  <script src="/assets/allUnitsData.js"></script>
+  
+  <!-- Chart.js for distributions -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .ui-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .ui-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .ui-content {
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    /* Loading spinner */
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .dashboard-container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+  </div>
+  
+  <!-- Main UI module -->
+  <script type="module">
+    import { uiController } from './ui.js';
+    
+    // Initialize when ready
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await uiController.init();
+        console.log('AP Statistics PoK Blockchain initialized');
+      } catch (error) {
+        console.error('Failed to initialize:', error);
+        document.getElementById('app').innerHTML = `
+          <div style="text-align: center; padding: 2rem;">
+            <h2>Failed to initialize</h2>
+            <p>${error.message}</p>
+            <button onclick="location.reload()">Retry</button>
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -4,7 +4,8 @@
       "Bash(npx tsc:*)",
       "Bash(./build.sh)",
       "Bash(sudo apt-get:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

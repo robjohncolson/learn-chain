@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AP Statistics PoK - Phase 3 Demo</title>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      line-height: 1.6;
+    }
+    
+    /* Header */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .header-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .username {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .reputation {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    
+    .exam-countdown {
+      text-align: center;
+    }
+    
+    .countdown-days {
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+    
+    /* Dashboard */
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .dashboard-section {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+    
+    .stat-card {
+      padding: 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    
+    .unit-item {
+      margin-bottom: 1.5rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .unit-header {
+      padding: 1rem;
+      background: #f5f5f5;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .unit-header:hover {
+      background: #eeeeee;
+    }
+    
+    .unit-title {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .topics-list {
+      display: none;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    
+    .unit-item.expanded .topics-list {
+      display: block;
+    }
+    
+    .topic-item {
+      padding: 0.75rem 1rem 0.75rem 2rem;
+      border-top: 1px solid #f0f0f0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .topic-item:hover {
+      background: #f9f9f9;
+    }
+    
+    .topic-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+    
+    .badge-video {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+    
+    .badge-quiz {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+    
+    /* Question View */
+    .question-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: none;
+    }
+    
+    .question-container.active {
+      display: block;
+    }
+    
+    .question-text {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      color: #333;
+    }
+    
+    .choices {
+      margin-bottom: 2rem;
+    }
+    
+    .choice-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      background: #f5f5f5;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .choice-item:hover {
+      background: #e0e0e0;
+    }
+    
+    .choice-item input {
+      margin-right: 1rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 1rem;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Attestation View */
+    .attestation-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: none;
+      text-align: center;
+    }
+    
+    .attestation-container.active {
+      display: block;
+    }
+    
+    .consensus-progress {
+      margin: 2rem 0;
+    }
+    
+    .progress-bar {
+      height: 30px;
+      background: #e0e0e0;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.5s ease;
+    }
+    
+    .distribution-chart {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-section">
+      <div>
+        <div class="username">TestUser</div>
+        <div class="reputation">🌱 250</div>
+      </div>
+    </div>
+    <div class="header-section">
+      <div class="exam-countdown">
+        <div>AP Exam In</div>
+        <div class="countdown-days">118</div>
+        <div>May 5, 2025</div>
+      </div>
+    </div>
+    <div class="header-section">
+      <button class="btn" onclick="toggleView('dashboard')">Dashboard</button>
+    </div>
+  </header>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="dashboard-container">
+    <div class="dashboard-section">
+      <h2 class="section-title">Your Stats</h2>
+      <div class="stat-card">
+        <div class="stat-value">250</div>
+        <div class="stat-label">Reputation</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Attestations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">7</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+    </div>
+    
+    <div class="dashboard-section">
+      <h2 class="section-title">AP Statistics Curriculum</h2>
+      <div class="units-tree">
+        <div class="unit-item" onclick="toggleUnit(this)">
+          <div class="unit-header">
+            <div>
+              <div class="unit-title">Unit 1: Exploring One-Variable Data</div>
+              <div style="font-size: 0.85rem; color: #666;">15-23% • 0/10 topics</div>
+            </div>
+            <div>25%</div>
+          </div>
+          <ul class="topics-list">
+            <li class="topic-item" onclick="startQuestion(event)">
+              <div>
+                <div>Topic 1.1</div>
+                <div style="font-size: 0.85rem; color: #888;">Introducing Statistics</div>
+              </div>
+              <div>
+                <span class="topic-badge badge-video">1 video</span>
+                <span class="topic-badge badge-quiz">1 quiz</span>
+              </div>
+            </li>
+            <li class="topic-item" onclick="startQuestion(event)">
+              <div>
+                <div>Topic 1.2</div>
+                <div style="font-size: 0.85rem; color: #888;">The Language of Variation</div>
+              </div>
+              <div>
+                <span class="topic-badge badge-quiz">2 quizzes</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="unit-item" onclick="toggleUnit(this)">
+          <div class="unit-header">
+            <div>
+              <div class="unit-title">Unit 2: Exploring Two-Variable Data</div>
+              <div style="font-size: 0.85rem; color: #666;">5-7% • 0/5 topics</div>
+            </div>
+            <div>0%</div>
+          </div>
+          <ul class="topics-list">
+            <li class="topic-item">
+              <div>Topic 2.1: Two-Variable Relationships</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dashboard-section">
+      <h2 class="section-title">Recent Activity</h2>
+      <div style="color: #888; text-align: center; padding: 2rem;">
+        No recent activity
+      </div>
+    </div>
+  </div>
+
+  <!-- Question View -->
+  <div id="question" class="question-container">
+    <h2>Question</h2>
+    <div class="question-text">
+      What is the probability of rolling a 6 on a fair six-sided die?
+    </div>
+    <div class="choices">
+      <label class="choice-item">
+        <input type="radio" name="answer" value="A">
+        <span>A) 1/6</span>
+      </label>
+      <label class="choice-item">
+        <input type="radio" name="answer" value="B">
+        <span>B) 1/3</span>
+      </label>
+      <label class="choice-item">
+        <input type="radio" name="answer" value="C">
+        <span>C) 1/2</span>
+      </label>
+      <label class="choice-item">
+        <input type="radio" name="answer" value="D">
+        <span>D) 2/3</span>
+      </label>
+      <label class="choice-item">
+        <input type="radio" name="answer" value="E">
+        <span>E) 5/6</span>
+      </label>
+    </div>
+    <div>
+      <button class="btn btn-primary" onclick="submitAnswer()">Submit Attestation</button>
+      <button class="btn" onclick="toggleView('dashboard')">Back</button>
+    </div>
+  </div>
+
+  <!-- Attestation View -->
+  <div id="attestation" class="attestation-container">
+    <h2>⏳ Attestation Submitted</h2>
+    <p>Your answer has been recorded on the blockchain.</p>
+    <p style="color: #666; font-style: italic;">Waiting for consensus to form...</p>
+    
+    <div class="consensus-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <p id="progressText">0% consensus</p>
+    </div>
+    
+    <div class="distribution-chart" style="display: none;" id="chartContainer">
+      <canvas id="consensusChart"></canvas>
+    </div>
+    
+    <button class="btn btn-primary" onclick="revealConsensus()" style="display: none;" id="revealBtn">
+      Reveal Consensus
+    </button>
+    
+    <button class="btn" onclick="toggleView('dashboard')">Back to Dashboard</button>
+  </div>
+
+  <script>
+    // Simple view toggling
+    function toggleView(viewName) {
+      document.getElementById('dashboard').style.display = viewName === 'dashboard' ? 'grid' : 'none';
+      document.getElementById('question').classList.toggle('active', viewName === 'question');
+      document.getElementById('attestation').classList.toggle('active', viewName === 'attestation');
+    }
+    
+    // Toggle unit expansion
+    function toggleUnit(element) {
+      element.classList.toggle('expanded');
+    }
+    
+    // Start question flow
+    function startQuestion(event) {
+      event.stopPropagation();
+      toggleView('question');
+    }
+    
+    // Submit answer
+    function submitAnswer() {
+      const selected = document.querySelector('input[name="answer"]:checked');
+      if (!selected) {
+        alert('Please select an answer');
+        return;
+      }
+      
+      console.log('Submitting attestation for answer:', selected.value);
+      toggleView('attestation');
+      
+      // Simulate consensus building
+      simulateConsensus();
+    }
+    
+    // Simulate consensus progress
+    function simulateConsensus() {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 100) progress = 100;
+        
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('progressText').textContent = Math.round(progress) + '% consensus';
+        
+        if (progress >= 50) {
+          document.getElementById('revealBtn').style.display = 'inline-block';
+        }
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+        }
+      }, 1000);
+    }
+    
+    // Reveal consensus
+    function revealConsensus() {
+      document.getElementById('chartContainer').style.display = 'block';
+      document.getElementById('revealBtn').style.display = 'none';
+      
+      // Create distribution chart
+      const ctx = document.getElementById('consensusChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['A (1/6)', 'B (1/3)', 'C (1/2)', 'D (2/3)', 'E (5/6)'],
+          datasets: [{
+            label: 'Responses',
+            data: [85, 5, 3, 2, 5],
+            backgroundColor: 'rgba(102, 126, 234, 0.8)'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Consensus Distribution'
+            }
+          }
+        }
+      });
+    }
+    
+    // Initialize
+    console.log('🚀 Phase 3 Demo Loaded');
+    console.log('📊 Dashboard → Click topic to start question flow');
+    console.log('❓ Question → Submit to create attestation');
+    console.log('⏳ Attestation → Watch consensus build, then reveal');
+  </script>
+</body>
+</html>

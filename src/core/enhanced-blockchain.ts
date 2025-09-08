@@ -1,15 +1,16 @@
 // Phase 2: Enhanced Blockchain with Consensus Integration
 // Extends Phase 1 blockchain with ADR-028 features
 
-import { Blockchain as Phase1Blockchain, createTransaction } from './blockchain.js';
-import { Transaction, AttestationData } from './types.js';
-import { ConsensusCalculator, QuestionDistribution } from './consensus.js';
-import { DistributionTracker } from './distributions.js';
-import { ReputationCalculator } from '../reputation/calculator.js';
-import { OutlierDetector } from './outliers.js';
-import { RateLimiter } from './rate-limiter.js';
-import { MCQAttestation, FRQAttestation, QuestionAttestation } from '../questions/types.js';
-import { hashMCQAnswer } from '../questions/hashing.js';
+import { Blockchain as Phase1Blockchain, createTransaction } from './blockchain';
+import { Transaction, AttestationData } from './types';
+import { ConsensusCalculator, QuestionDistribution } from './consensus';
+import { DistributionTracker } from './distributions';
+import { ReputationCalculator } from '../reputation/calculator';
+import { OutlierDetector } from './outliers';
+import { RateLimiter } from './rate-limiter';
+import { MCQAttestation, FRQAttestation, QuestionAttestation } from '../questions/types';
+import { hashMCQAnswer } from '../questions/hashing';
+import type { ConsensusData } from '../types/consensus';
 
 // Extended attestation data for Phase 2
 export interface Phase2AttestationData extends AttestationData {
@@ -195,6 +196,86 @@ export class EnhancedBlockchain extends Phase1Blockchain {
     };
   }
   
+  /**
+   * Get attestations for a specific question
+   */
+  getAttestationsForQuestion(questionId: string): Transaction[] {
+    return this.chain
+      .flatMap(block => block.transactions)
+      .filter(tx => 
+        tx.txType === 'Attestation' && 
+        (tx.data as AttestationData).questionId === questionId
+      );
+  }
+
+  /**
+   * Get consensus data for a question
+   */
+  getConsensusForQuestion(questionId: string): ConsensusData | null {
+    const distribution = this.distributionTracker.getDistribution(questionId);
+    if (!distribution) return null;
+
+    // Format as ConsensusData
+    const consensusData: ConsensusData = {
+      type: distribution.mcqDistribution ? 'mcq' : 'frq',
+      convergence: distribution.convergence || 0,
+      totalAttestations: distribution.attestationCount || 0
+    };
+
+    if (distribution.mcqDistribution) {
+      consensusData.mcq = {
+        distribution: distribution.mcqDistribution,
+        topChoice: Object.entries(distribution.mcqDistribution)
+          .sort(([,a], [,b]) => b - a)[0]?.[0] || ''
+      };
+    }
+
+    if (distribution.frqScores && distribution.frqScores.length > 0) {
+      const scores = distribution.frqScores;
+      const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+      const variance = scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / scores.length;
+      
+      consensusData.frq = {
+        scores,
+        mean,
+        stdDev: Math.sqrt(variance),
+        peerAnswers: [] // TODO: Add peer answer storage
+      };
+    }
+
+    return consensusData;
+  }
+
+  /**
+   * Get attestation count for a user
+   */
+  getAttestationCount(pubkey: string): number {
+    return this.chain
+      .flatMap(block => block.transactions)
+      .filter(tx => 
+        tx.txType === 'Attestation' && 
+        tx.attesterPubkey === pubkey
+      ).length;
+  }
+
+  /**
+   * Get recent transactions
+   */
+  getRecentTransactions(limit: number = 10): Transaction[] {
+    const allTxs = this.chain
+      .flatMap(block => block.transactions)
+      .sort((a, b) => b.timestamp - a.timestamp);
+    
+    return allTxs.slice(0, limit);
+  }
+
+  /**
+   * Get user reputation (async version)
+   */
+  async getUserReputation(pubkey: string): Promise<number> {
+    return this.userReputations.get(pubkey) || 0;
+  }
+
   /**
    * Get distribution for a specific question
    */
