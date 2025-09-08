@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 4: QR Sync Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        
+        .test-section h2 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+        
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        
+        #app {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Phase 4: QR Code Synchronization Test</h1>
+        <p class="subtitle">Test offline device synchronization via QR codes</p>
+        
+        <div class="test-section">
+            <h2>1. Initialize Test Environment</h2>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="initializeTest()">Initialize System</button>
+                <button class="btn btn-secondary" onclick="createTestTransactions()">Create Test Data</button>
+                <button class="btn btn-secondary" onclick="showStats()">Show Stats</button>
+            </div>
+            <div class="stats" id="stats"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Test QR Sync Modal</h2>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="openSyncModal()">Open Sync Modal</button>
+                <button class="btn btn-secondary" onclick="testCompression()">Test Compression</button>
+                <button class="btn btn-secondary" onclick="testChunking()">Test Chunking</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Test Individual Components</h2>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="testDiffExtraction()">Test Diff Extraction</button>
+                <button class="btn btn-secondary" onclick="testQRGeneration()">Test QR Generation</button>
+                <button class="btn btn-secondary" onclick="testMerger()">Test Merger</button>
+                <button class="btn btn-secondary" onclick="testExport()">Test USB Export</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Console Output</h2>
+            <div class="output" id="output">Waiting for test actions...</div>
+        </div>
+        
+        <div id="app"></div>
+    </div>
+    
+    <script type="module">
+        import { EnhancedBlockchain } from './src/core/enhanced-blockchain.js';
+        import { Profile } from './src/core/profile.js';
+        import { createTransaction } from './src/core/blockchain.js';
+        import { SyncController } from './src/sync/index.js';
+        import { SyncModal } from './src/ui/sync-modal.js';
+        import { DiffExtractor } from './src/sync/diff.js';
+        import { Compressor } from './src/sync/compression.js';
+        import { QRDisplay } from './src/sync/qr-display.js';
+        import { StateMerger } from './src/sync/merger.js';
+        import { USBExporter } from './src/persistence/export.js';
+        import { hashMCQAnswer } from './src/questions/hashing.js';
+        
+        let blockchain, profile, syncController, syncModal;
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+        
+        window.initializeTest = async function() {
+            try {
+                log('Initializing test environment...');
+                
+                // Create blockchain and profile
+                blockchain = new EnhancedBlockchain();
+                profile = new Profile();
+                profile.username = 'TestUser';
+                profile.reputationScore = 100;
+                
+                // Initialize sync components
+                syncController = new SyncController(blockchain, profile);
+                syncModal = new SyncModal(blockchain, profile);
+                
+                // Add styles
+                SyncModal.addStyles();
+                SyncController.initStyles();
+                
+                log('✓ Test environment initialized');
+                log(`  - User: ${profile.username}`);
+                log(`  - Reputation: ${profile.reputationScore}`);
+                
+                showStats();
+            } catch (err) {
+                log(`✗ Error: ${err.message}`);
+            }
+        };
+        
+        window.createTestTransactions = async function() {
+            try {
+                log('Creating test transactions...');
+                
+                const questions = [
+                    'Q001_MEAN_MEDIAN',
+                    'Q002_STANDARD_DEV',
+                    'Q003_PROBABILITY'
+                ];
+                
+                for (let i = 0; i < 10; i++) {
+                    const questionId = questions[i % questions.length];
+                    const answer = ['A', 'B', 'C', 'D', 'E'][Math.floor(Math.random() * 5)];
+                    
+                    const tx = createTransaction(
+                        blockchain.getLatestBlock().hash,
+                        Date.now() + i * 1000,
+                        profile.pubkey,
+                        'test-signature-' + i,
+                        'Attestation',
+                        {
+                            questionId,
+                            answerHash: hashMCQAnswer(answer),
+                            confidence: Math.floor(Math.random() * 5) + 1
+                        }
+                    );
+                    
+                    await blockchain.addTransaction(tx);
+                    log(`  + Added attestation for ${questionId} (answer: ${answer})`);
+                }
+                
+                log('✓ Created 10 test transactions');
+                showStats();
+            } catch (err) {
+                log(`✗ Error: ${err.message}`);
+            }
+        };
+        
+        window.showStats = function() {
+            const chain = blockchain?.chain || [];
+            let txCount = 0;
+            for (const block of chain) {
+                txCount += block.transactions?.length || 0;
+            }
+            
+            const lastSync = syncController?.getLastSyncTime();
+            const lastSyncStr = lastSync ? lastSync.toLocaleString() : 'Never';
+            
+            document.getElementById('stats').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${chain.length}</div>
+                    <div class="stat-label">Blocks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${txCount}</div>
+                    <div class="stat-label">Transactions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${profile?.reputationScore || 0}</div>
+                    <div class="stat-label">Reputation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${lastSyncStr}</div>
+                    <div class="stat-label">Last Sync</div>
+                </div>
+            `;
+        };
+        
+        window.openSyncModal = function() {
+            log('Opening sync modal...');
+            syncModal.open();
+            log('✓ Sync modal opened');
+        };
+        
+        window.testCompression = function() {
+            try {
+                log('Testing compression...');
+                const compressor = new Compressor();
+                
+                const testDiff = {
+                    fromTimestamp: Date.now() - 86400000,
+                    toTimestamp: Date.now(),
+                    transactions: [],
+                    blockHashes: ['hash1', 'hash2'],
+                    version: '1.0.0'
+                };
+                
+                const compressed = compressor.compress(testDiff);
+                const stats = compressor.getCompressionStats(testDiff, compressed);
+                
+                log(`  Original size: ${stats.originalSize} bytes`);
+                log(`  Compressed size: ${stats.compressedSize} bytes`);
+                log(`  Compression ratio: ${(stats.ratio * 100).toFixed(1)}%`);
+                log(`  Chunks needed: ${stats.chunkCount}`);
+                
+                const decompressed = compressor.decompress(compressed);
+                const isValid = JSON.stringify(testDiff) === JSON.stringify(decompressed);
+                
+                log(`✓ Compression test ${isValid ? 'passed' : 'FAILED'}`);
+            } catch (err) {
+                log(`✗ Error: ${err.message}`);
+            }
+        };
+        
+        window.testChunking = function() {
+            try {
+                log('Testing chunking...');
+                const compressor = new Compressor();
+                
+                const largeData = 'x'.repeat(5000); // 5KB of data
+                const chunks = compressor.chunk(largeData);
+                
+                log(`  Data size: ${largeData.length} bytes`);
+                log(`  Chunks created: ${chunks.length}`);
+                log(`  Chunk size: ${chunks[0].data.length} bytes`);
+                
+                const reassembled = compressor.reassemble(chunks);
+                const isValid = reassembled === largeData;
+                
+                log(`✓ Chunking test ${isValid ? 'passed' : 'FAILED'}`);
+            } catch (err) {
+                log(`✗ Error: ${err.message}`);
+            }
+        };
+        
+        window.testDiffExtraction = function() {
+            try {
+                log('Testing diff extraction...');
+                const extractor = new DiffExtractor(blockchain);
+                
+                const lastSync = Date.now() - 3600000; // 1 hour ago
+                const diff = extractor.extractDiff(lastSync);
+                
+                log(`  Transactions found: ${diff.transactions.length}`);
+                log(`  Block hashes: ${diff.blockHashes.length}`);
+                log(`  Estimated chunks: ${extractor.estimateChunkCount(diff)}`);
+                
+                log('✓ Diff extraction test passed');
+            } catch (err) {
+                log(`✗ Error: ${err.message}`);
+            }
+        };
+        
+        window.testQRGeneration = async function() {
+            try {
+                log('Testing QR generation...');
+                const display = new QRDisplay();
+                const compressor = new Compressor();
+                
+                const testChunk = {
+                    syncId: 'test-sync-123',
+                    index: 0,
+                    total: 3,
+                    data: 'Test QR data',
+                    checksum: 'abc123'
+                };
+                
+                const qrDataUrl = await display.generateSingleQR(testChunk);
+                log(`  QR generated: ${qrDataUrl.substring(0, 50)}...`);
+                
+                // Test encoding/decoding
+                const encoded = compressor.encodeChunk(testChunk);
+                const decoded = compressor.decodeChunk(encoded);
+                
+                log(`  Encoded length: ${encoded.length} chars`);
+                log(`  Decode valid: ${decoded.index === testChunk.index}`);
+                
+                log('✓ QR generation test passed');
+            } catch (err) {
+                log(`✗ Error: ${err.message}`);
+            }
+        };
+        
+        window.testMerger = async function() {
+            try {
+                log('Testing merger...');
+                const merger = new StateMerger(blockchain);
+                
+                const testDiff = {
+                    fromTimestamp: 0,
+                    toTimestamp: Date.now(),
+                    transactions: [],
+                    blockHashes: [],
+                    version: '1.0.0'
+                };
+                
+                const result = await merger.merge(testDiff);
+                
+                log(`  Success: ${result.success}`);
+                log(`  Added: ${result.addedTransactions} transactions`);
+                log(`  Conflicts: ${result.conflicts.length}`);
+                log(`  Reputation changes: ${result.reputationChanges.size} users`);
+                
+                const report = merger.generateReport(result);
+                log('\n' + report);
+                
+                log('✓ Merger test passed');
+            } catch (err) {
+                log(`✗ Error: ${err.message}`);
+            }
+        };
+        
+        window.testExport = async function() {
+            try {
+                log('Testing USB export...');
+                const exporter = new USBExporter(blockchain);
+                
+                log('  Export will trigger file download...');
+                await exporter.exportToZip();
+                
+                log('✓ Export test initiated');
+            } catch (err) {
+                log(`✗ Error: ${err.message}`);
+            }
+        };
+        
+        // Auto-initialize on load
+        window.addEventListener('load', () => {
+            log('Phase 4 test page loaded');
+            log('Click "Initialize System" to begin');
+        });
+    </script>
+</body>
+</html>

@@ -11,6 +11,8 @@ export interface HeaderOptions {
   onUnitChange?: (unitId: string) => void;
   onThemeToggle?: () => void;
   onAudioToggle?: () => void;
+  onSyncClick?: () => void;
+  lastSyncTime?: Date;
 }
 
 /**
@@ -293,6 +295,29 @@ function createRightSection(options: HeaderOptions): HTMLElement {
     }
   };
   
+  // Sync button
+  const syncBtn = document.createElement('button');
+  syncBtn.className = 'header-btn icon-btn';
+  syncBtn.innerHTML = '🔄';
+  syncBtn.title = 'Sync devices';
+  
+  // Add sync badge if last sync was long ago
+  if (options.lastSyncTime) {
+    const daysSinceSync = Math.floor((Date.now() - options.lastSyncTime.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceSync > 7) {
+      syncBtn.style.position = 'relative';
+      const badge = document.createElement('span');
+      badge.style.cssText = 'position: absolute; top: -4px; right: -4px; background: #ff6b6b; width: 8px; height: 8px; border-radius: 50%;';
+      syncBtn.appendChild(badge);
+    }
+  }
+  
+  syncBtn.onclick = () => {
+    if (options.onSyncClick) {
+      options.onSyncClick();
+    }
+  };
+  
   // Stats button
   const statsBtn = document.createElement('button');
   statsBtn.className = 'header-btn';
@@ -302,6 +327,7 @@ function createRightSection(options: HeaderOptions): HTMLElement {
     console.log('Show stats');
   };
   
+  section.appendChild(syncBtn);
   section.appendChild(themeBtn);
   section.appendChild(audioBtn);
   section.appendChild(statsBtn);

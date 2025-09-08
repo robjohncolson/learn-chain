@@ -5,7 +5,8 @@
       "Bash(./build.sh)",
       "Bash(sudo apt-get:*)",
       "Bash(unzip:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

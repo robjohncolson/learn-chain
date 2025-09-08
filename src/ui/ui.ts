@@ -12,8 +12,11 @@ import { renderDashboard } from './dashboard';
 import { QuestionController } from '../question/question';
 import { Theme, initTheme, toggleTheme } from './theme';
 import { initAudio, playSound } from './audio';
+import { SyncModal } from './sync-modal';
+import { SyncController } from '../sync';
+import { USBExporter } from '../persistence/export';
 
-export type ViewMode = 'dashboard' | 'question' | 'attestation' | 'results';
+export type ViewMode = 'dashboard' | 'question' | 'attestation' | 'results' | 'sync';
 
 export interface UIState {
   currentView: ViewMode;
@@ -33,6 +36,8 @@ class UIController {
   private headerEl: HTMLElement | null = null;
   private contentEl: HTMLElement | null = null;
   private questionController: QuestionController | null = null;
+  private syncModal: SyncModal | null = null;
+  private syncController: SyncController | null = null;
 
   constructor() {
     // Load persisted state or create new
@@ -46,6 +51,10 @@ class UIController {
       audioEnabled: true,
       examDate: new Date('2025-05-05') // AP exam date
     };
+    
+    // Initialize sync components
+    this.syncModal = new SyncModal(this.state.blockchain, this.state.profile);
+    this.syncController = new SyncController(this.state.blockchain, this.state.profile);
 
     // Initialize container
     this.container = document.getElementById('app') || document.body;
@@ -62,6 +71,10 @@ class UIController {
     // Initialize theme and audio
     await initTheme(this.state.theme);
     await initAudio(this.state.audioEnabled);
+    
+    // Initialize sync modal styles
+    SyncModal.addStyles();
+    SyncController.initStyles();
 
     // Create main layout
     this.createLayout();
@@ -109,7 +122,9 @@ class UIController {
       examDate: this.state.examDate,
       onUnitChange: (unitId) => this.handleUnitChange(unitId),
       onThemeToggle: () => this.handleThemeToggle(),
-      onAudioToggle: () => this.handleAudioToggle()
+      onAudioToggle: () => this.handleAudioToggle(),
+      onSyncClick: () => this.handleSyncClick(),
+      lastSyncTime: this.syncController?.getLastSyncTime() || undefined
     });
 
     this.headerEl.innerHTML = '';
@@ -303,6 +318,15 @@ class UIController {
   private handleNextQuestion(): void {
     // TODO: Get next question from curriculum
     this.switchView('dashboard');
+  }
+
+  /**
+   * Handle sync button click
+   */
+  private handleSyncClick(): void {
+    if (this.syncModal) {
+      this.syncModal.open();
+    }
   }
 
   /**

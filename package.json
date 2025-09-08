@@ -31,12 +31,13 @@
     "vm-browserify": "^1.1.2"
   },
   "dependencies": {
+    "@types/uuid": "^10.0.0",
     "chart.js": "3.9.1",
     "html5-qrcode": "^2.3.8",
     "idb": "^7.1.1",
     "lz-string": "^1.5.0",
     "mathjax": "^3.2.2",
-    "qrcode": "^1.5.3",
+    "qrcode": "^1.5.4",
     "uuid": "^9.0.1"
   }
 }
