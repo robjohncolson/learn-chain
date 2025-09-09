@@ -1,4 +1,4 @@
-const POK_CURRICULUM = [
+[
   {
     "id": "U1-L2-Q01",
     "type": "multiple-choice",
@@ -37848,4 +37848,4 @@ const POK_CURRICULUM = [
       ]
     }
   }
-];
+]

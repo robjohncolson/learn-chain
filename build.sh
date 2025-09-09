@@ -18,6 +18,10 @@ npm run typecheck || echo "⚠️  Type errors found (continuing anyway)"
 echo "🏗️  Building production bundle..."
 npx parcel build src/index.html --public-url ./ --no-source-maps --dist-dir dist
 
+# Step 3b: Copy assets to dist
+echo "📁 Copying assets to dist..."
+cp -r assets dist/
+
 # Step 4: Check build size
 DIST_SIZE=$(du -sh dist | cut -f1)
 echo "📏 Build size: $DIST_SIZE"

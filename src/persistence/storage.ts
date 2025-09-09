@@ -69,7 +69,7 @@ export class Storage {
   // Load the entire blockchain
   async loadChain(): Promise<Block[]> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      await this.init();
     }
     
     return new Promise((resolve, reject) => {
@@ -151,7 +151,7 @@ export class Storage {
   // Load all profiles
   async loadAllProfiles(): Promise<Profile[]> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      await this.init();
     }
     
     return new Promise((resolve, reject) => {

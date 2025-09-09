@@ -6,12 +6,34 @@
    ```bash
    ./build.sh
    ```
-   This creates `app.zip` (404KB) containing everything needed.
+   This creates `app.zip` (327KB) containing everything needed.
 
 2. **Deploy to device**
    - Transfer `app.zip` via USB or local network
    - Unzip to any folder
-   - Open `dist/index.html` in Chrome/Edge
+   
+3. **Run the application** (IMPORTANT: Cannot open HTML directly due to CORS)
+   
+   **Option A: Using Python (recommended)**
+   ```bash
+   cd [extracted folder]
+   python -m http.server 8080
+   ```
+   Then open http://localhost:8080/dist/ in browser
+   
+   **Option B: Using Node.js**
+   ```bash
+   npm install -g http-server
+   cd [extracted folder]
+   http-server dist -p 8080
+   ```
+   Then open http://localhost:8080 in browser
+   
+   **Option C: For development**
+   ```bash
+   npm run serve
+   ```
+   Then open http://localhost:8080/dist/ in browser
 
 ## Netbook Testing Protocol
 
