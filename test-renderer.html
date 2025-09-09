@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chart.js and MathJax Renderer</title>
+    
+    <!-- Load Chart.js from CDN for testing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    
+    <!-- Load MathJax -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        .question-container {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .choices {
+            margin: 20px 0;
+        }
+        .choice {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .choice:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .choice-key {
+            font-weight: bold;
+            color: #2196f3;
+            margin-right: 8px;
+        }
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        canvas {
+            max-height: 400px;
+        }
+        .test-section {
+            border-top: 2px solid #e0e0e0;
+            margin-top: 40px;
+            padding-top: 20px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .consensus-viz {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 AP Statistics Renderer Test</h1>
+        <p>Testing MathJax rendering and Chart.js consensus dotplot visualization</p>
+    </div>
+
+    <div class="container">
+        <h2>1️⃣ MathJax Multiple Choice Test</h2>
+        <div class="question-container">
+            <p><strong>Question:</strong> What is the expected value of the random variable $X$ where $X \sim N(\mu, \sigma^2)$ with $\mu = 5$ and $\sigma = 2$?</p>
+            
+            <div class="choices" id="mcq-choices">
+                <div class="choice" data-math="true">
+                    <span class="choice-key">A.</span>
+                    <span class="choice-text">$E[X] = 0$ because it's normally distributed</span>
+                </div>
+                <div class="choice" data-math="true">
+                    <span class="choice-key">B.</span>
+                    <span class="choice-text">$E[X] = 5$ since $E[X] = \mu$</span>
+                </div>
+                <div class="choice" data-math="true">
+                    <span class="choice-key">C.</span>
+                    <span class="choice-text">$E[X] = 2$ because $\sigma = 2$</span>
+                </div>
+                <div class="choice" data-math="true">
+                    <span class="choice-key">D.</span>
+                    <span class="choice-text">$E[X] = \sqrt{5}$ using the square root rule</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mathjax-status" class="status">Checking MathJax...</div>
+    </div>
+
+    <div class="container">
+        <h2>2️⃣ Consensus Dotplot Visualization</h2>
+        <p>This simulates how individual responses from the blockchain would appear as a dotplot</p>
+        
+        <div class="consensus-viz">
+            <div class="chart-container">
+                <div class="chart-title">MCQ Consensus Distribution (Individual Responses)</div>
+                <canvas id="consensus-mcq" width="800" height="300"></canvas>
+            </div>
+        </div>
+
+        <div class="consensus-viz">
+            <div class="chart-container">
+                <div class="chart-title">FRQ Score Distribution (Individual Responses)</div>
+                <canvas id="consensus-frq" width="800" height="300"></canvas>
+            </div>
+        </div>
+        
+        <div id="chart-status" class="status">Checking Chart.js...</div>
+    </div>
+
+    <div class="container test-section">
+        <h2>3️⃣ Test with Complex Math</h2>
+        <div class="question-container">
+            <p>The probability density function is: $$f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}$$</p>
+            <p>The correlation coefficient is calculated as: $r = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2 \sum_{i=1}^{n}(y_i - \bar{y})^2}}$</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Test MathJax rendering
+        function testMathJax() {
+            const status = document.getElementById('mathjax-status');
+            
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                // Queue rendering for choices
+                const choices = document.getElementById('mcq-choices');
+                MathJax.typesetPromise([choices])
+                    .then(() => {
+                        status.className = 'status success';
+                        status.textContent = '✅ MathJax rendering successful! Math in choices rendered correctly.';
+                    })
+                    .catch(err => {
+                        status.className = 'status error';
+                        status.textContent = '❌ MathJax error: ' + err.message;
+                    });
+            } else {
+                setTimeout(testMathJax, 500);
+            }
+        }
+
+        // Create consensus dotplot for MCQ
+        function createMCQDotplot() {
+            const canvas = document.getElementById('consensus-mcq');
+            const ctx = canvas.getContext('2d');
+            
+            // Simulate 50 responses with consensus on choice B
+            const responses = {
+                'A': 8,
+                'B': 25,  // Consensus answer
+                'C': 12,
+                'D': 5
+            };
+            
+            // Generate jittered points
+            const points = [];
+            Object.entries(responses).forEach(([choice, count]) => {
+                const x = choice.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+                for (let i = 0; i < count; i++) {
+                    points.push({
+                        x: x,
+                        y: (Math.random() - 0.5) * 0.6, // Jitter ±0.3
+                        label: `Choice ${choice}`
+                    });
+                }
+            });
+
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Individual Responses',
+                        data: points,
+                        backgroundColor: points.map(p => {
+                            const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
+                            return colors[p.x];
+                        }),
+                        borderColor: 'rgba(0,0,0,0.2)',
+                        borderWidth: 1,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        type: 'line',
+                        label: 'Baseline',
+                        data: [{x: -0.5, y: 0}, {x: 3.5, y: 0}],
+                        borderColor: 'rgba(0,0,0,0.2)',
+                        borderDash: [5, 5],
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: false
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const choice = String.fromCharCode(65 + Math.round(context.parsed.x));
+                                    return `Choice ${choice}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Answer Choice'
+                            },
+                            ticks: {
+                                callback: (value) => String.fromCharCode(65 + value),
+                                stepSize: 1
+                            },
+                            min: -0.5,
+                            max: 3.5
+                        },
+                        y: {
+                            title: {
+                                display: false
+                            },
+                            ticks: {
+                                display: false
+                            },
+                            grid: {
+                                display: false
+                            },
+                            min: -0.5,
+                            max: 0.5
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create consensus dotplot for FRQ
+        function createFRQDotplot() {
+            const canvas = document.getElementById('consensus-frq');
+            const ctx = canvas.getContext('2d');
+            
+            // Simulate score distribution (1-5 scale)
+            const scores = [
+                ...Array(5).fill(2),   // 5 people scored 2
+                ...Array(15).fill(3),  // 15 people scored 3
+                ...Array(20).fill(4),  // 20 people scored 4 (consensus)
+                ...Array(8).fill(5)    // 8 people scored 5
+            ];
+            
+            // Generate jittered points
+            const points = scores.map(score => ({
+                x: score,
+                y: (Math.random() - 0.5) * 0.6,
+                label: `Score: ${score}`
+            }));
+
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Individual Scores',
+                        data: points,
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        type: 'line',
+                        label: 'Baseline',
+                        data: [{x: 1.5, y: 0}, {x: 5.5, y: 0}],
+                        borderColor: 'rgba(0,0,0,0.2)',
+                        borderDash: [5, 5],
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: false
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Score Value'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            },
+                            min: 1.5,
+                            max: 5.5
+                        },
+                        y: {
+                            title: {
+                                display: false
+                            },
+                            ticks: {
+                                display: false
+                            },
+                            grid: {
+                                display: false
+                            },
+                            min: -0.5,
+                            max: 0.5
+                        }
+                    }
+                }
+            });
+        }
+
+        // Test Chart.js
+        function testCharts() {
+            const status = document.getElementById('chart-status');
+            
+            if (window.Chart) {
+                try {
+                    createMCQDotplot();
+                    createFRQDotplot();
+                    status.className = 'status success';
+                    status.textContent = '✅ Chart.js consensus dotplots rendered successfully!';
+                } catch (err) {
+                    status.className = 'status error';
+                    status.textContent = '❌ Chart.js error: ' + err.message;
+                }
+            } else {
+                status.className = 'status error';
+                status.textContent = '❌ Chart.js not loaded';
+            }
+        }
+
+        // Run tests
+        window.addEventListener('DOMContentLoaded', () => {
+            testMathJax();
+            testCharts();
+        });
+    </script>
+</body>
+</html>

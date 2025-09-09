@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AP Stats App - Integrated Test</title>
+    
+    <!-- Load dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .question-container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .question-prompt {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        .choices {
+            margin: 20px 0;
+        }
+        .choice {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .choice:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateX(5px);
+        }
+        .choice-key {
+            font-weight: bold;
+            color: #2196f3;
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        .choice-text {
+            flex: 1;
+        }
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .consensus-section {
+            background: #f0f8ff;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status-message {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <h1>AP Statistics Consensus App</h1>
+        <p>Testing Integrated Chart.js and MathJax Rendering</p>
+    </div>
+
+    <!-- Sample Question with Math and Chart -->
+    <div class="question-container">
+        <h2>Question U3-L5-Q02</h2>
+        
+        <div class="question-prompt" data-math="true">
+            A normal distribution has mean $\mu = 100$ and standard deviation $\sigma = 15$. 
+            What is the probability that a randomly selected value falls within one standard deviation of the mean? 
+            That is, find $P(\mu - \sigma < X < \mu + \sigma)$.
+        </div>
+
+        <!-- Chart attachment -->
+        <div class="chart-container">
+            <h3>Normal Distribution Visualization</h3>
+            <canvas id="normal-dist-chart" width="600" height="300"></canvas>
+        </div>
+
+        <!-- Multiple Choice with Math -->
+        <div class="choices" id="mcq-choices">
+            <div class="choice" data-math="true">
+                <span class="choice-key">A.</span>
+                <span class="choice-text">Approximately $0.50$ or $50\%$</span>
+            </div>
+            <div class="choice" data-math="true">
+                <span class="choice-key">B.</span>
+                <span class="choice-text">Approximately $0.68$ or $68\%$ (using the empirical rule)</span>
+            </div>
+            <div class="choice" data-math="true">
+                <span class="choice-key">C.</span>
+                <span class="choice-text">Approximately $0.95$ or $95\%$</span>
+            </div>
+            <div class="choice" data-math="true">
+                <span class="choice-key">D.</span>
+                <span class="choice-text">Approximately $0.997$ or $99.7\%$</span>
+            </div>
+        </div>
+
+        <div class="status-message status-info">
+            <strong>Hint:</strong> Recall the 68-95-99.7 rule for normal distributions.
+        </div>
+    </div>
+
+    <!-- Consensus Visualization -->
+    <div class="question-container consensus-section">
+        <h2>Consensus View - Blockchain Responses</h2>
+        <p>This dotplot shows how 45 students answered this question:</p>
+        
+        <div class="chart-container">
+            <canvas id="consensus-dotplot" width="800" height="300"></canvas>
+        </div>
+        
+        <div class="status-message status-success">
+            <strong>Consensus Reached!</strong> 71% of students selected choice B (correct answer)
+        </div>
+    </div>
+
+    <!-- Control Buttons -->
+    <div class="question-container">
+        <button onclick="testMathRendering()">Test Math Rendering</button>
+        <button onclick="testChartRendering()">Test Chart Rendering</button>
+        <button onclick="showConsensus()">Show Consensus Dotplot</button>
+    </div>
+
+    <script type="module">
+        // Simulate the renderer modules
+        const mathRenderer = {
+            queueMathRendering: function(element) {
+                if (window.MathJax && MathJax.typesetPromise) {
+                    MathJax.typesetPromise([element]).catch(console.warn);
+                }
+            },
+            renderChoiceMath: function(container) {
+                const choices = container.querySelectorAll('.choice');
+                choices.forEach(choice => {
+                    if (window.MathJax && MathJax.typesetPromise) {
+                        MathJax.typesetPromise([choice]).catch(console.warn);
+                    }
+                });
+            }
+        };
+
+        const chartManager = {
+            observeChart: function(canvasId, chartData) {
+                const canvas = document.getElementById(canvasId);
+                if (canvas && window.Chart) {
+                    // Simulate lazy loading - would use IntersectionObserver in real app
+                    this.initChart(canvas, chartData);
+                }
+            },
+            initChart: function(canvas, data) {
+                const ctx = canvas.getContext('2d');
+                // Render based on chart type
+                if (data.type === 'normal') {
+                    this.renderNormalDistribution(ctx);
+                }
+            },
+            renderNormalDistribution: function(ctx) {
+                // Generate normal distribution data
+                const xValues = [];
+                const yValues = [];
+                for (let x = 40; x <= 160; x += 2) {
+                    xValues.push(x);
+                    const z = (x - 100) / 15;
+                    const y = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * z * z);
+                    yValues.push(y);
+                }
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: xValues,
+                        datasets: [{
+                            label: 'Normal Distribution (μ=100, σ=15)',
+                            data: yValues,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Probability Density'
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+            renderConsensusDotplot: function(canvasId, consensusData) {
+                const canvas = document.getElementById(canvasId);
+                const ctx = canvas.getContext('2d');
+                
+                // Generate dots for consensus
+                const points = [];
+                const responses = { A: 5, B: 32, C: 6, D: 2 }; // 45 total
+                
+                Object.entries(responses).forEach(([choice, count]) => {
+                    const x = choice.charCodeAt(0) - 65;
+                    for (let i = 0; i < count; i++) {
+                        points.push({
+                            x: x,
+                            y: (Math.random() - 0.5) * 0.6
+                        });
+                    }
+                });
+
+                new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Student Responses',
+                            data: points,
+                            backgroundColor: points.map(p => {
+                                const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
+                                return colors[p.x];
+                            }),
+                            borderColor: 'rgba(0,0,0,0.2)',
+                            borderWidth: 1,
+                            pointRadius: 6
+                        }, {
+                            type: 'line',
+                            label: 'Baseline',
+                            data: [{x: -0.5, y: 0}, {x: 3.5, y: 0}],
+                            borderColor: 'rgba(0,0,0,0.2)',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `Choice ${String.fromCharCode(65 + Math.round(ctx.parsed.x))}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Answer Choice' },
+                                ticks: {
+                                    callback: (v) => String.fromCharCode(65 + v),
+                                    stepSize: 1
+                                },
+                                min: -0.5,
+                                max: 3.5
+                            },
+                            y: {
+                                display: false,
+                                min: -0.5,
+                                max: 0.5
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Render math in question
+            mathRenderer.queueMathRendering(document.querySelector('.question-prompt'));
+            
+            // Render math in choices
+            mathRenderer.renderChoiceMath(document.getElementById('mcq-choices'));
+            
+            // Initialize chart
+            chartManager.observeChart('normal-dist-chart', { type: 'normal' });
+            
+            // Show consensus automatically
+            setTimeout(() => {
+                chartManager.renderConsensusDotplot('consensus-dotplot', {});
+            }, 500);
+        });
+
+        // Test functions
+        window.testMathRendering = function() {
+            mathRenderer.queueMathRendering(document.body);
+            alert('Math rendering queued - check if formulas are displayed correctly');
+        };
+
+        window.testChartRendering = function() {
+            chartManager.observeChart('normal-dist-chart', { type: 'normal' });
+            alert('Chart rendering triggered - check if chart is displayed');
+        };
+
+        window.showConsensus = function() {
+            chartManager.renderConsensusDotplot('consensus-dotplot', {});
+            alert('Consensus dotplot rendered - each dot represents one student response');
+        };
+    </script>
+</body>
+</html>
