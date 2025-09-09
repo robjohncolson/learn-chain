@@ -97,43 +97,83 @@ function setupEventHandlers() {
 }
 
 async function loadQuestions() {
+  const questionsList = document.getElementById('questions-list');
+  if (!questionsList) return;
+  
   try {
     // Try to load curriculum data
     const response = await fetch('./assets/curriculum.json');
     if (response.ok) {
       const data = await response.json();
-      const questionsList = document.getElementById('questions-list');
-      if (questionsList && data.units && data.units.length > 0) {
+      console.log('Loaded curriculum data:', data);
+      
+      // Check if data is an array of questions directly
+      if (Array.isArray(data) && data.length > 0) {
         // Show first few questions
+        const questions = data.slice(0, 5);
+        
+        // Group questions by unit if they have unit info
+        const unitGroups = new Map();
+        data.forEach((q: any) => {
+          const unit = q.unit || 'General';
+          if (!unitGroups.has(unit)) {
+            unitGroups.set(unit, []);
+          }
+          unitGroups.get(unit).push(q);
+        });
+        
+        questionsList.innerHTML = `
+          <h3>AP Statistics Questions</h3>
+          <p><strong>${data.length} total questions available</strong></p>
+          <p>Units: ${unitGroups.size} unique topics</p>
+          <h4>Sample Questions:</h4>
+          <ul>
+            ${questions.map((q: any, idx: number) => `
+              <li style="margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 5px;">
+                <strong>Question ${idx + 1}${q.id ? ` (ID: ${q.id})` : ''}:</strong><br>
+                ${(q.prompt || q.text || q.question || 'Question text')?.substring(0, 150)}...<br>
+                <small>
+                  Type: <span style="color: blue;">${q.type || 'unknown'}</span>
+                  ${q.unit ? ` | Unit: ${q.unit}` : ''}
+                  ${q.topic ? ` | Topic: ${q.topic}` : ''}
+                </small>
+              </li>
+            `).join('')}
+          </ul>
+          <p style="color: green;">✓ Questions loaded successfully!</p>
+        `;
+      } else if (data.units && data.units.length > 0) {
+        // Handle unit-based structure
         const firstUnit = data.units[0];
         const firstTopic = firstUnit.topics?.[0];
         const questions = firstTopic?.questions?.slice(0, 3) || [];
         
+        const totalQuestions = data.units.reduce((sum: number, u: any) => 
+          sum + (u.topics?.reduce((tSum: number, t: any) => 
+            tSum + (t.questions?.length || 0), 0) || 0), 0);
+        
         questionsList.innerHTML = `
-          <h3>${firstUnit.title}</h3>
+          <h3>${firstUnit.title || 'Unit 1'}</h3>
           <p>${firstTopic?.title || 'Topic'}</p>
           <ul>
             ${questions.map((q: any) => `
               <li style="margin: 10px 0;">
-                <strong>Q${q.id}:</strong> ${q.prompt?.substring(0, 100)}...
-                <br><small>Type: ${q.type}</small>
+                <strong>Q${q.id}:</strong> ${(q.prompt || q.text || 'Question')?.substring(0, 100)}...
+                <br><small>Type: ${q.type || 'unknown'}</small>
               </li>
             `).join('')}
           </ul>
-          <p><em>${data.units.length} units, ${data.units.reduce((sum: number, u: any) => 
-            sum + (u.topics?.reduce((tSum: number, t: any) => 
-              tSum + (t.questions?.length || 0), 0) || 0), 0)} total questions available</em></p>
+          <p><em>${data.units.length} units, ${totalQuestions} total questions available</em></p>
         `;
+      } else {
+        questionsList.innerHTML = '<p>No questions found in curriculum</p>';
       }
     } else {
-      throw new Error('Could not load curriculum');
+      throw new Error(`Could not load curriculum: ${response.status}`);
     }
   } catch (error) {
     console.error('Error loading questions:', error);
-    const questionsList = document.getElementById('questions-list');
-    if (questionsList) {
-      questionsList.innerHTML = '<p style="color: red;">Error loading questions. Check console.</p>';
-    }
+    questionsList.innerHTML = '<p style="color: red;">Error loading questions. Check console.</p>';
   }
 }
 

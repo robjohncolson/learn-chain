@@ -217,7 +217,7 @@ export const API = {
   validateSystem
 };
 
-// Auto-initialize if running in browser
-if (typeof window !== 'undefined') {
-  window.addEventListener('DOMContentLoaded', initialize);
-}
+// Don't auto-initialize - let app.ts handle it
+// if (typeof window !== 'undefined') {
+//   window.addEventListener('DOMContentLoaded', initialize);
+// }

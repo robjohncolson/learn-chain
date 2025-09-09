@@ -46,21 +46,23 @@ export class Storage {
   // Save the entire blockchain
   async saveChain(blocks: Block[]): Promise<void> {
     if (!this.db) {
-      throw new Error('Database not initialized');
-    }
-    
-    const transaction = this.db.transaction([BLOCKS_STORE], 'readwrite');
-    const store = transaction.objectStore(BLOCKS_STORE);
-    
-    // Clear existing blocks
-    await this.clearStore(BLOCKS_STORE);
-    
-    // Save all blocks
-    for (const block of blocks) {
-      store.add(block);
+      await this.init();
     }
     
     return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([BLOCKS_STORE], 'readwrite');
+      const store = transaction.objectStore(BLOCKS_STORE);
+      
+      // Clear existing blocks first
+      const clearRequest = store.clear();
+      
+      clearRequest.onsuccess = () => {
+        // Now add all blocks
+        for (const block of blocks) {
+          store.add(block);
+        }
+      };
+      
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(new Error('Failed to save blockchain'));
     });
