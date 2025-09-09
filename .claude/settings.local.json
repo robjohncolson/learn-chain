@@ -17,7 +17,8 @@
       "Bash(./clean-build.sh:*)",
       "Bash(npm run serve-dist:*)",
       "Bash(pkill:*)",
-      "Bash(npx http-server:*)"
+      "Bash(npx http-server:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

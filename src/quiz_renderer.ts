@@ -28,15 +28,11 @@ import type {
   RubricPart
 } from './types';
 
-// Chart.js will be lazily loaded
-let ChartJS: any = null;
-let ChartDataLabels: any = null;
+// Import new renderer modules
+import { queueMathRendering, observeMath, renderChoiceMath } from './renderer/mathRenderer';
+import { observeChart, renderConsensusDotplot, destroyChart, destroyAllCharts } from './ui/charts';
 
-// MathJax will be lazily loaded
-let MathJax: any = null;
-
-// Track active chart instances for cleanup
-const chartInstances: Map<string, any> = new Map();
+// Chart instances now managed by charts module
 
 // Current theme state
 let currentTheme: Theme = { name: 'light' };
@@ -60,13 +56,8 @@ export function renderQuiz(
   // Clear any existing content
   container.innerHTML = '';
   
-  // Destroy existing charts
-  chartInstances.forEach(chart => {
-    if (chart && typeof chart.destroy === 'function') {
-      chart.destroy();
-    }
-  });
-  chartInstances.clear();
+  // Destroy existing charts using charts module
+  destroyAllCharts();
   
   // Render stats if in multi-question mode
   if (!options.singleQuestion) {
@@ -85,12 +76,8 @@ export function renderQuiz(
   
   container.appendChild(questionsContainer);
   
-  // Initialize MathJax if needed
-  if (MathJax && typeof MathJax.typesetPromise === 'function') {
-    MathJax.typesetPromise([container]).catch((e: any) => 
-      console.warn('MathJax typesetting failed:', e)
-    );
-  }
+  // Queue MathJax rendering for the container
+  queueMathRendering(container, 1);
   
   return container;
 }
@@ -116,7 +103,7 @@ export function renderQuestion(
       <div class="question-id">ID: ${escapeHtml(question.id)}</div>
       <div class="question-id">Type: ${escapeHtml(question.type)}</div>
       
-      <div class="question-prompt">
+      <div class="question-prompt" data-math="true">
         ${escapeHtml(question.prompt)}
       </div>
   `;
@@ -282,8 +269,8 @@ export function renderChart(chartData: ChartData, questionId: string): string {
     </div>
   `;
   
-  // Schedule chart initialization
-  setTimeout(() => initializeChart(chartId, chartData), 100);
+  // Use lazy loading observer for chart
+  setTimeout(() => observeChart(chartId, chartData), 50);
   
   return html;
 }
@@ -343,14 +330,23 @@ export function renderChoices(
       `data-choice-key="${escapeHtml(choice.key)}"` : '';
     
     html += `
-      <div class="${classes.join(' ')}" ${dataAttrs}>
+      <div class="${classes.join(' ')}" ${dataAttrs} data-math="true">
         <span class="choice-key">${escapeHtml(choice.key)}.</span> 
-        ${escapeHtml(choice.value)}
+        <span class="choice-text">${escapeHtml(choice.value)}</span>
       </div>
     `;
   });
   
   html += '</div>';
+  
+  // Queue math rendering for choices after DOM insertion
+  setTimeout(() => {
+    const choicesEl = document.querySelector('.choices:last-child');
+    if (choicesEl) {
+      renderChoiceMath(choicesEl as HTMLElement);
+    }
+  }, 50);
+  
   return html;
 }
 
@@ -515,6 +511,19 @@ export function renderConsensusDisplay(
         `<div>Emergent Answer: <strong>${escapeHtml(String(consensus.emergentAnswer))}</strong></div>` : ''}
     </div>
   `;
+  
+  // Render consensus dotplot using new charts module
+  if (consensus.hasConsensus) {
+    const canvasId = `consensus-chart-${questionId}`;
+    html += `
+      <div class="consensus-chart">
+        <canvas id="${canvasId}" style="width: 100%; max-height: 300px;"></canvas>
+      </div>
+    `;
+    
+    // Schedule dotplot rendering
+    setTimeout(() => renderConsensusDotplot(consensus, canvasId), 100);
+  }
   
   html += '</div>';
   return html;

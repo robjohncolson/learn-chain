@@ -8,6 +8,8 @@ import { EnhancedBlockchain } from '../core/enhanced-blockchain';
 import { createTransaction } from '../core/blockchain';
 import { hashMCQAnswer } from '../questions/hashing';
 import { renderQuestion as renderQuizQuestion, renderChart } from '../quiz_renderer';
+import { queueMathRendering, renderChoiceMath } from '../renderer/mathRenderer';
+import { observeChart, renderConsensusDotplot } from '../ui/charts';
 import { questionLoader } from '../questions/loader';
 import type { Question, ConsensusData, RenderOptions, RenderCallbacks } from '../types';
 
@@ -92,11 +94,15 @@ export class QuestionController {
     // Subscribe to consensus updates
     this.subscribeToConsensus(questionId);
 
-    // Initialize MathJax if needed
+    // Initialize MathJax with proper queue
     if (question.text?.includes('$') || question.text?.includes('\\(')) {
-      // MathJax will be loaded by quiz_renderer if needed
-      if ((window as any).MathJax) {
-        (window as any).MathJax.typesetPromise([container]);
+      // Use proper math rendering queue
+      queueMathRendering(container, 2);
+      
+      // Also queue math for any choices
+      const choicesEl = container.querySelector('.choices');
+      if (choicesEl) {
+        renderChoiceMath(choicesEl as HTMLElement);
       }
     }
 
@@ -445,35 +451,12 @@ export class QuestionController {
    * Render distribution chart
    */
   private renderDistributionChart(consensusData: ConsensusData): void {
-    const canvas = document.getElementById('consensus-chart') as HTMLCanvasElement;
+    const canvasId = 'consensus-chart';
+    const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) return;
 
-    if (consensusData.type === 'mcq' && consensusData.mcq) {
-      renderChart({
-        type: 'bar',
-        data: {
-          labels: Object.keys(consensusData.mcq.distribution),
-          datasets: [{
-            label: 'Responses',
-            data: Object.values(consensusData.mcq.distribution),
-            backgroundColor: 'rgba(102, 126, 234, 0.8)'
-          }]
-        }
-      }, canvas);
-    } else if (consensusData.type === 'frq' && consensusData.frq) {
-      // Histogram for FRQ scores
-      renderChart({
-        type: 'bar',
-        data: {
-          labels: ['1', '2', '3', '4', '5'],
-          datasets: [{
-            label: 'Score Distribution',
-            data: this.calculateScoreHistogram(consensusData.frq.scores),
-            backgroundColor: 'rgba(118, 75, 162, 0.8)'
-          }]
-        }
-      }, canvas);
-    }
+    // Use new consensus dotplot renderer for better visualization
+    renderConsensusDotplot(consensusData, canvasId);
   }
 
   /**

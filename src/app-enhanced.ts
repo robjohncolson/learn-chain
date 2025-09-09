@@ -6,6 +6,7 @@
 import { initialize as initBackend, API } from './index';
 import { renderQuestion as renderQuizQuestion, renderChart, renderConsensusDisplay } from './quiz_renderer';
 import { questionLoader } from './questions/loader';
+import { initializeChart } from './utils/chartHelpers';
 import { EnhancedBlockchain } from './core/enhanced-blockchain';
 import QRCode from 'qrcode';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -18,24 +19,91 @@ let allUnitsData: any = null;
 
 // Load MathJax for LaTeX rendering
 function loadMathJax() {
-  if ((window as any).MathJax) {
-    (window as any).MathJax.typesetPromise();
+  if ((window as any).MathJax && (window as any).MathJax.typesetPromise) {
+    // MathJax already loaded, just re-typeset
+    try {
+      (window as any).MathJax.typesetPromise();
+    } catch (e) {
+      console.log('MathJax typeset error (will retry):', e);
+    }
     return;
   }
+  
+  // Configure MathJax before loading
+  (window as any).MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    svg: {
+      fontCache: 'global'
+    },
+    startup: {
+      ready: () => {
+        (window as any).MathJax.startup.defaultReady();
+        (window as any).MathJax.startup.promise.then(() => {
+          console.log('MathJax loaded and ready');
+          // Try to typeset after MathJax is ready
+          setTimeout(() => {
+            if ((window as any).MathJax && (window as any).MathJax.typesetPromise) {
+              try {
+                (window as any).MathJax.typesetPromise();
+              } catch (e) {
+                console.log('Initial MathJax typeset error:', e);
+              }
+            }
+          }, 100);
+        });
+      }
+    }
+  };
   
   const script = document.createElement('script');
   script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
   script.async = true;
-  script.onload = () => {
-    (window as any).MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-      }
-    };
-    (window as any).MathJax.typesetPromise();
-  };
   document.head.appendChild(script);
+}
+
+function loadChartJS(): Promise<void> {
+  if ((window as any).Chart) {
+    return Promise.resolve();
+  }
+  
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+    script.onload = () => {
+      console.log('Chart.js loaded successfully');
+      resolve();
+    };
+    script.onerror = () => {
+      console.error('Failed to load Chart.js from CDN');
+      resolve();
+    };
+    document.head.appendChild(script);
+  });
+}
+
+function renderSimpleChart(canvas: HTMLCanvasElement, chartData: any) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  
+  // Simple fallback chart rendering
+  const width = canvas.width = 400;
+  const height = canvas.height = 300;
+  
+  ctx.fillStyle = '#f0f0f0';
+  ctx.fillRect(0, 0, width, height);
+  
+  ctx.fillStyle = '#333';
+  ctx.font = '14px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${chartData.chartType || 'Chart'} - Data Visualization`, width/2, height/2);
+  ctx.font = '12px sans-serif';
+  ctx.fillText('(Chart.js not loaded)', width/2, height/2 + 20);
+  
+  console.log('Rendered simple fallback chart');
 }
 
 async function startApp() {
@@ -46,6 +114,14 @@ async function startApp() {
   
   // Initialize enhanced blockchain
   blockchain = new EnhancedBlockchain();
+  
+  // Load required libraries
+  try {
+    await loadChartJS();
+  } catch (error) {
+    console.error('Error loading Chart.js:', error);
+  }
+  loadMathJax();
   
   // Load curriculum data
   await loadCurriculumData();
@@ -101,6 +177,64 @@ async function loadCurriculumData() {
                 questions: topicQuestions
               };
             });
+          }
+        });
+        
+        // Map remaining PC (Progress Check) and FRQ questions
+        const unmappedQuestions = allQuestions.filter(q => {
+          // Check if this question was already mapped
+          let isMapped = false;
+          Object.values(allUnitsData).forEach((unit: any) => {
+            Object.values(unit.topics).forEach((topic: any) => {
+              if (topic.questions.includes(q)) {
+                isMapped = true;
+              }
+            });
+          });
+          return !isMapped;
+        });
+        
+        console.log(`Found ${unmappedQuestions.length} unmapped questions`);
+        
+        // Group PC and FRQ questions by unit
+        unmappedQuestions.forEach((q: any) => {
+          // Check for PC questions (including PC-FRQ and PC-MCQ)
+          const pcMatch = q.id.match(/U(\d+)-PC-/);
+          if (pcMatch) {
+            const unitNum = pcMatch[1];
+            const unitId = `unit${unitNum}`;
+            if (allUnitsData[unitId]) {
+              // Determine if it's FRQ or MCQ
+              const isFRQ = q.id.includes('FRQ');
+              const topicKey = isFRQ ? 'progress-check-frq' : 'progress-check-mcq';
+              const topicTitle = isFRQ ? 'Progress Check - Free Response' : 'Progress Check - Multiple Choice';
+              
+              // Add to appropriate Progress Check topic
+              if (!allUnitsData[unitId].topics[topicKey]) {
+                allUnitsData[unitId].topics[topicKey] = {
+                  title: topicTitle,
+                  questions: []
+                };
+              }
+              allUnitsData[unitId].topics[topicKey].questions.push(q);
+            }
+          } else {
+            // Check for other FRQ questions or any other pattern
+            const unitMatch = q.id.match(/U(\d+)/);
+            if (unitMatch) {
+              const unitNum = unitMatch[1];
+              const unitId = `unit${unitNum}`;
+              if (allUnitsData[unitId]) {
+                // Add to "Other Questions" topic
+                if (!allUnitsData[unitId].topics['other']) {
+                  allUnitsData[unitId].topics['other'] = {
+                    title: 'Additional Questions',
+                    questions: []
+                  };
+                }
+                allUnitsData[unitId].topics['other'].questions.push(q);
+              }
+            }
           }
         });
         
@@ -370,7 +504,36 @@ async function renderQuestionView(unitId: string, topicId: string, questionIndex
       `;
     }
     
+    // Add chart if present
+    if (currentQuestion.attachments?.chartType) {
+      questionHTML += renderChart(currentQuestion.attachments, currentQuestion.id || `q-${questionIndex}`);
+    }
+    
     questionContent.innerHTML = questionHTML;
+    
+    // Trigger MathJax rendering after content is added to DOM
+    setTimeout(() => {
+      loadMathJax();
+    }, 50);
+    
+    // Initialize any charts that were added
+    if (currentQuestion.attachments?.chartType) {
+      setTimeout(async () => {
+        // The chart ID is generated by renderChart function
+        const canvases = questionContent.querySelectorAll('canvas[id^="chart-"]');
+        if (canvases.length > 0) {
+          const chartCanvas = canvases[0] as HTMLCanvasElement;
+          try {
+            await initializeChart(chartCanvas.id, currentQuestion.attachments);
+            console.log('Chart initialized for:', chartCanvas.id);
+          } catch (error) {
+            console.error('Error initializing chart:', error);
+            // Fallback: try to render a simple chart without Chart.js
+            renderSimpleChart(chartCanvas, currentQuestion.attachments);
+          }
+        }
+      }, 200);
+    }
     
     // Render answer input based on question type
     if (currentQuestion.type === 'multiple-choice') {
@@ -397,15 +560,29 @@ async function renderQuestionView(unitId: string, topicId: string, questionIndex
       }
       
       answerInput.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;" id="mc-choices">
           ${choices.map((choice: any) => `
             <label style="display: flex; align-items: flex-start; padding: 10px; background: #f5f5f5; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
               <input type="radio" name="answer" value="${choice.id}" style="margin-right: 10px; margin-top: 3px;">
-              <span><strong>${choice.id}:</strong> ${choice.text}</span>
+              <span class="choice-text"><strong>${choice.id}:</strong> ${choice.text}</span>
             </label>
           `).join('')}
         </div>
       `;
+      
+      // Trigger MathJax for multiple choice answers
+      setTimeout(() => {
+        if ((window as any).MathJax && (window as any).MathJax.typesetPromise) {
+          const choicesDiv = document.getElementById('mc-choices');
+          if (choicesDiv) {
+            try {
+              (window as any).MathJax.typesetPromise([choicesDiv]);
+            } catch (e) {
+              console.log('MathJax typeset error for choices:', e);
+            }
+          }
+        }
+      }, 100);
     } else {
       // Free response
       answerInput.innerHTML = `
