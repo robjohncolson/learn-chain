@@ -4,13 +4,13 @@
  */
 
 import { uiController } from './ui/ui';
-import { Profile } from './core/profile';
+import { createProfile } from './core/profile';
 import { EnhancedBlockchain } from './core/enhanced-blockchain';
 
 // Export for debugging
 (window as any).phase3 = {
   uiController,
-  Profile,
+  createProfile,
   EnhancedBlockchain
 };
 

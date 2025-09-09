@@ -14,7 +14,10 @@
       "Bash(chmod:*)",
       "Bash(dos2unix:*)",
       "Bash(sed:*)",
-      "Bash(./clean-build.sh:*)"
+      "Bash(./clean-build.sh:*)",
+      "Bash(npm run serve-dist:*)",
+      "Bash(pkill:*)",
+      "Bash(npx http-server:*)"
     ],
     "deny": [],
     "ask": []

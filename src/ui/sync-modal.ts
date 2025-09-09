@@ -5,8 +5,16 @@
 
 import { SyncController } from '../sync';
 import { EnhancedBlockchain } from '../core/enhanced-blockchain';
-import { Profile } from '../core/profile';
 import { USBExporter } from '../persistence/export';
+
+// Define Profile interface locally to avoid import issues
+interface Profile {
+  username: string;
+  pubkey: string;
+  privkey: string;
+  seedphrase: string;
+  reputationScore?: number;
+}
 
 export class SyncModal {
   private syncController: SyncController;

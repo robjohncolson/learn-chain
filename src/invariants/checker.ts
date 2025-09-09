@@ -11,7 +11,15 @@ import {
 } from './types';
 import { EnhancedBlockchain } from '../core/enhanced-blockchain';
 import { Transaction, AttestationData } from '../core/types';
-import { Profile } from '../core/profile';
+
+// Define Profile interface locally to avoid import issues
+interface Profile {
+  username: string;
+  pubkey: string;
+  privkey: string;
+  seedphrase: string;
+  reputationScore?: number;
+}
 import { sha256 } from '../core/crypto';
 import { QuestionDistribution } from '../core/consensus';
 import { loadState, saveState } from '../persistence/storage';

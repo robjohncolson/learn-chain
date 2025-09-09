@@ -11,9 +11,17 @@ import {
   FRQRubric
 } from './types';
 import { EnhancedBlockchain } from '../core/enhanced-blockchain';
-import { Profile } from '../core/profile';
 import { createTransaction } from '../core/blockchain';
 import { AttestationData } from '../core/types';
+
+// Define Profile interface locally to avoid import issues
+interface Profile {
+  username: string;
+  pubkey: string;
+  privkey: string;
+  seedphrase: string;
+  reputationScore?: number;
+}
 import { sha256 } from '../core/crypto';
 import { QuestionDistribution } from '../core/consensus';
 

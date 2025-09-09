@@ -5,10 +5,10 @@
  */
 
 import { EnhancedBlockchain } from '../core/enhanced-blockchain';
-import { Profile } from '../core/profile';
 import { createTransaction } from '../core/blockchain';
 import { hashMCQAnswer } from '../questions/hashing';
-import { renderQuestion as renderQuizQuestion, renderChart, initMathJax } from '../quiz_renderer';
+import { renderQuestion as renderQuizQuestion, renderChart } from '../quiz_renderer';
+import { questionLoader } from '../questions/loader';
 import type { Question, ConsensusData, RenderOptions, RenderCallbacks } from '../types';
 
 export interface QuestionOptions {
@@ -26,6 +26,15 @@ export interface AttestationState {
   submitted: boolean;
   consensusData?: ConsensusData;
   revealMode: boolean;
+}
+
+// Define Profile interface locally to avoid import issues
+interface Profile {
+  username: string;
+  pubkey: string;
+  privkey: string;
+  seedphrase: string;
+  reputationScore?: number;
 }
 
 export class QuestionController {
@@ -85,8 +94,10 @@ export class QuestionController {
 
     // Initialize MathJax if needed
     if (question.text?.includes('$') || question.text?.includes('\\(')) {
-      await initMathJax();
-      (window as any).MathJax?.typesetPromise([container]);
+      // MathJax will be loaded by quiz_renderer if needed
+      if ((window as any).MathJax) {
+        (window as any).MathJax.typesetPromise([container]);
+      }
     }
 
     // Add styles
@@ -193,21 +204,7 @@ export class QuestionController {
    * Load question data
    */
   private async loadQuestion(questionId: string): Promise<Question | null> {
-    // TODO: Load from curriculum/questions data
-    // For now, return mock data
-    return {
-      id: questionId,
-      type: 'multiple-choice',
-      text: 'What is the probability of rolling a 6 on a fair die?',
-      choices: [
-        { id: 'A', text: '1/6' },
-        { id: 'B', text: '1/3' },
-        { id: 'C', text: '1/2' },
-        { id: 'D', text: '2/3' },
-        { id: 'E', text: '5/6' }
-      ],
-      attachments: {}
-    } as Question;
+    return await questionLoader.getQuestion(questionId);
   }
 
   /**

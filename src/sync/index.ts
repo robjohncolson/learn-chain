@@ -4,7 +4,6 @@
  */
 
 import { EnhancedBlockchain } from '../core/enhanced-blockchain';
-import { Profile } from '../core/profile';
 import { DiffExtractor } from './diff';
 import { Compressor } from './compression';
 import { QRDisplay } from './qr-display';
@@ -12,6 +11,15 @@ import { QRScanner } from './qr-scanner';
 import { StateMerger } from './merger';
 import { SyncDiff, MergeResult, SyncMetadata } from './types';
 import { v4 as uuidv4 } from 'uuid';
+
+// Define Profile interface locally to avoid import issues
+interface Profile {
+  username: string;
+  pubkey: string;
+  privkey: string;
+  seedphrase: string;
+  reputationScore?: number;
+}
 
 export class SyncController {
   private blockchain: EnhancedBlockchain;

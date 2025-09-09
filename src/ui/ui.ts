@@ -5,7 +5,6 @@
  */
 
 import { EnhancedBlockchain } from '../core/enhanced-blockchain';
-import { Profile } from '../core/profile';
 import { loadState, saveState } from '../persistence/storage';
 import { renderHeader } from './header';
 import { renderDashboard } from './dashboard';
@@ -17,6 +16,15 @@ import { SyncController } from '../sync';
 import { USBExporter } from '../persistence/export';
 
 export type ViewMode = 'dashboard' | 'question' | 'attestation' | 'results' | 'sync';
+
+// Define Profile interface locally to avoid import issues
+interface Profile {
+  username: string;
+  pubkey: string;
+  privkey: string;
+  seedphrase: string;
+  reputationScore?: number;
+}
 
 export interface UIState {
   currentView: ViewMode;
@@ -40,13 +48,11 @@ class UIController {
   private syncController: SyncController | null = null;
 
   constructor() {
-    // Load persisted state or create new
-    const savedState = loadState();
-    
+    // Initialize with default state - will load persisted state in init()
     this.state = {
       currentView: 'dashboard',
-      profile: savedState?.profile || new Profile(),
-      blockchain: savedState?.blockchain || new EnhancedBlockchain(),
+      profile: { username: '', pubkey: '', privkey: '', seedphrase: '', reputationScore: 0 },
+      blockchain: new EnhancedBlockchain(),
       theme: { name: 'light', colors: {} },
       audioEnabled: true,
       examDate: new Date('2025-05-05') // AP exam date
@@ -65,6 +71,19 @@ class UIController {
    * Initialize the UI
    */
   async init(): Promise<void> {
+    // Try to load persisted state
+    try {
+      const savedState = await loadState();
+      if (savedState?.profile) {
+        this.state.profile = savedState.profile;
+      }
+      if (savedState?.blockchain) {
+        this.state.blockchain = savedState.blockchain;
+      }
+    } catch (error) {
+      console.log('No saved state found or error loading:', error);
+    }
+
     // Clear container
     this.container.innerHTML = '';
 
@@ -270,6 +289,19 @@ class UIController {
   }
 
   /**
+   * Navigate to a specific question
+   */
+  public navigateToQuestion(unitId: string, topicId: string, questionId?: string): void {
+    this.state.currentUnit = unitId;
+    this.state.currentTopic = topicId;
+    if (questionId) {
+      this.state.currentQuestion = questionId;
+    }
+    // Switch to question view with the first question of the topic if no specific question
+    this.switchView('question', { unitId, topicId, questionId });
+  }
+
+  /**
    * Handle answer submission
    */
   private async handleAnswerSubmit(answer: any): Promise<void> {
@@ -330,6 +362,13 @@ class UIController {
   }
 
   /**
+   * Show sync modal
+   */
+  public showSyncModal(): void {
+    this.handleSyncClick();
+  }
+
+  /**
    * Handle theme toggle
    */
   private handleThemeToggle(): void {
@@ -382,11 +421,14 @@ class UIController {
   }
 }
 
-// Export singleton instance
+// Export the UIController class
+export { UIController };
+
+// Also export a default instance for convenience
 export const uiController = new UIController();
 
-// Initialize on DOM ready
-if (typeof document !== 'undefined') {
+// Initialize on DOM ready if not imported as module
+if (typeof document !== 'undefined' && typeof module === 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => uiController.init());
   } else {

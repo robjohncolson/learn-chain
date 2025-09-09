@@ -4,11 +4,19 @@
  * Shows progress, recent attestations, and unit overview
  */
 
-import { Profile } from '../core/profile';
 import { EnhancedBlockchain } from '../core/enhanced-blockchain';
 
 // Import allUnitsData.js
 declare const ALL_UNITS_DATA: any[];
+
+// Define Profile interface locally to avoid import issues
+interface Profile {
+  username: string;
+  pubkey: string;
+  privkey: string;
+  seedphrase: string;
+  reputationScore?: number;
+}
 
 export interface DashboardOptions {
   profile: Profile;

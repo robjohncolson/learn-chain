@@ -1,5 +1,14 @@
 // Persistence Layer using IndexedDB - Phase 1
-import { Block, Profile } from '../core/types.js';
+import { Block } from '../core/types.js';
+
+// Define Profile interface locally to avoid import issues
+interface Profile {
+  username: string;
+  pubkey: string;
+  privkey: string;
+  seedphrase: string;
+  reputationScore?: number;
+}
 
 const DB_NAME = 'APStatsConsensus';
 const DB_VERSION = 1;
@@ -235,8 +244,8 @@ export class Storage {
 export async function loadState(): Promise<any> {
   const storage = new Storage();
   await storage.init();
-  const blocks = await storage.getChain();
-  const profiles = await storage.getAllProfiles();
+  const blocks = await storage.loadChain();
+  const profiles = await storage.loadAllProfiles();
   storage.close();
   return { blocks, profiles };
 }
