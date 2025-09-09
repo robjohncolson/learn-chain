@@ -17,7 +17,10 @@
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "serve": "http-server test-deploy -p 8080 -c-1",
-    "serve-dist": "http-server dist -p 8080 -c-1"
+    "serve-dist": "http-server dist -p 8080 -c-1",
+    "clean": "rm -rf dist test-deploy .parcel-cache app.zip",
+    "clean-build": "./clean-build.sh",
+    "force-clean": "pkill -f 'http-server|python.*http.server|parcel' || true && rm -rf dist test-deploy .parcel-cache app.zip"
   },
   "repository": {
     "type": "git",

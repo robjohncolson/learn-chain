@@ -11,7 +11,10 @@
       "Bash(sudo rm:*)",
       "Bash(npx parcel build:*)",
       "Bash(zip:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(dos2unix:*)",
+      "Bash(sed:*)",
+      "Bash(./clean-build.sh:*)"
     ],
     "deny": [],
     "ask": []
